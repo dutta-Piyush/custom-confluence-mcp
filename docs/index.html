@@ -1,0 +1,762 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>confluence-mcp</title>
+    <style>
+      :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --border: #30363d;
+        --text: #e6edf3;
+        --text-dim: #8b949e;
+        --accent: #58a6ff;
+        --accent-hover: #79c0ff;
+        --green: #3fb950;
+        --orange: #d29922;
+        --purple: #bc8cff;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial,
+          sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        line-height: 1.6;
+      }
+
+      /* ── Header ── */
+      .header {
+        border-bottom: 1px solid var(--border);
+        padding: 40px 20px 32px;
+      }
+      .header-inner {
+        max-width: 860px;
+        margin: 0 auto;
+      }
+      .header h1 {
+        font-size: 1.75rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+      }
+      .header h1 code {
+        font-weight: 600;
+        font-size: 1.75rem;
+        color: var(--text);
+      }
+      .header .tagline {
+        color: var(--text-dim);
+        font-size: 1rem;
+        margin-bottom: 16px;
+      }
+      .header-meta {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .header-meta a {
+        color: var(--accent);
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+      .header-meta a:hover {
+        text-decoration: underline;
+      }
+      .header-meta .sep {
+        color: var(--border);
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+      }
+
+      /* ── Layout ── */
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 0 20px;
+      }
+      section {
+        padding: 40px 0;
+        border-bottom: 1px solid var(--border);
+      }
+      section:last-child {
+        border-bottom: none;
+      }
+      h2 {
+        font-size: 1.35rem;
+        font-weight: 600;
+        margin-bottom: 16px;
+      }
+      h3 {
+        font-size: 1.05rem;
+        margin: 20px 0 8px;
+      }
+
+      /* ── Code ── */
+      pre {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 0.875rem;
+        line-height: 1.5;
+        margin: 8px 0;
+      }
+      code {
+        font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+        font-size: 0.875rem;
+      }
+      .ci {
+        background: var(--surface);
+        padding: 2px 6px;
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        font-size: 0.85rem;
+      }
+      .g {
+        color: var(--green);
+      }
+
+      /* ── Table ── */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 10px 0;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 12px;
+        border: 1px solid var(--border);
+        font-size: 0.875rem;
+      }
+      th {
+        background: var(--surface);
+        font-weight: 600;
+      }
+      td code {
+        color: var(--accent);
+      }
+      .tag-r {
+        background: #1a3a2a;
+        color: var(--green);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+      .tag-w {
+        background: #3d2e0a;
+        color: var(--orange);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 600;
+      }
+
+      /* ── Cards ── */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 12px;
+        margin: 12px 0;
+      }
+      .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 16px;
+      }
+      .card h4 {
+        font-size: 0.9rem;
+        margin-bottom: 6px;
+        color: var(--accent);
+      }
+      .card p {
+        font-size: 0.85rem;
+        color: var(--text-dim);
+      }
+
+      /* ── CQL ── */
+      .cql {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .cql-row {
+        display: flex;
+        gap: 12px;
+        align-items: baseline;
+      }
+      .cql-label {
+        flex-shrink: 0;
+        width: 130px;
+        color: var(--text-dim);
+        font-size: 0.85rem;
+      }
+      .cql-code {
+        font-family: "Cascadia Code", monospace;
+        font-size: 0.85rem;
+        color: var(--green);
+      }
+
+      /* ── Setup output ── */
+      .term {
+        background: #0a0e14;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 16px;
+        font-family: "Cascadia Code", monospace;
+        font-size: 0.82rem;
+        line-height: 1.7;
+      }
+      .term .s {
+        color: var(--orange);
+      }
+      .term .ok {
+        color: var(--green);
+      }
+      .term .d {
+        color: var(--text-dim);
+      }
+      .term .h {
+        color: var(--accent);
+      }
+
+      /* ── Links ── */
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+
+      .topbar {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 8px 20px;
+        text-align: center;
+        font-size: 0.78rem;
+        color: var(--text-dim);
+      }
+      .topbar a {
+        color: var(--accent);
+      }
+      footer {
+        text-align: center;
+        padding: 32px 20px;
+        color: var(--text-dim);
+        font-size: 0.8rem;
+      }
+
+      @media (max-width: 600px) {
+        .header h1 {
+          font-size: 1.4rem;
+        }
+        .cql-row {
+          flex-direction: column;
+          gap: 2px;
+        }
+        .cql-label {
+          width: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      Open source — issues or questions? Open an issue on GitHub.
+    </div>
+
+    <div class="header">
+      <div class="header-inner">
+        <h1><code>confluence-mcp</code></h1>
+        <p class="tagline">
+          MCP server that connects GitHub Copilot to Confluence. 20 tools
+          &mdash; read, write, search, crawl, diagram &mdash; all from VS Code
+          chat.
+        </p>
+        <div class="header-meta">
+          <a
+            href="https://github.com/your-org/confluence-mcp"
+            target="_blank"
+            rel="noopener noreferrer"
+            >GitHub &nearr;</a
+          >
+          <span class="sep">|</span>
+          <a
+            href="https://your-confluence.company.com/plugins/personalaccesstokens/usertokens.action"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Create PAT &nearr;</a
+          >
+          <span class="sep">|</span>
+          <span class="pill">Python 3.10+</span>
+          <span class="pill">MCP v1.0</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- ── Quick Start ── -->
+      <section>
+        <h2>Quick Start</h2>
+
+        <h3>1. Create a Personal Access Token</h3>
+        <p style="color: var(--text-dim)">
+          Go to your Confluence →
+          <strong>Profile → Personal Access Tokens</strong> and create a token.
+          No special permissions needed.<br /><small
+            style="color: var(--text-dim)"
+            >URL pattern:
+            <code
+              >https://your-confluence.company.com/plugins/personalaccesstokens/usertokens.action</code
+            ></small
+          >
+        </p>
+
+        <h3>2. Clone &amp; run setup</h3>
+        <pre><span class="g">git clone</span> https://github.com/your-org/confluence-mcp.git
+<span class="g">cd</span> confluence-mcp
+<span class="g">.\setup.ps1</span></pre>
+        <p style="color: var(--text-dim); margin-top: 8px; font-size: 0.85rem">
+          If you have SSH configured:
+          <code class="ci"
+            >git clone git@github.com:your-org/confluence-mcp.git</code
+          >
+        </p>
+
+        <div class="term">
+          <span class="s">[1/7]</span> Check Python &ge; 3.10<br />
+          <span class="s">[2/7]</span> Create virtual environment<br />
+          <span class="s">[3/7]</span> Install dependencies<br />
+          <span class="s">[4/7]</span> Ask for your PAT<br />
+          <span class="s">[5/7]</span> <span class="ok">Validate PAT</span>
+          <span class="d">&rarr; "Authenticated as: Your Name"</span><br />
+          <span class="s">[6/7]</span> <span class="ok">Verify server</span>
+          <span class="d">&rarr; "20 tools loaded"</span><br />
+          <span class="s">[7/7]</span>
+          <span class="h">Auto-inject config</span> into VS Code
+          settings.json<br />
+          <br />
+          <span class="ok">Setup complete.</span>
+        </div>
+
+        <h3>3. Reload VS Code</h3>
+        <p style="color: var(--text-dim)">
+          <code class="ci">Ctrl+Shift+P</code> &rarr;
+          <strong>Developer: Reload Window</strong>. The
+          <code class="ci">confluence</code> server appears in your MCP list.
+          Done.
+        </p>
+        <p style="color: var(--text-dim); margin-top: 12px">
+          <strong>Note:</strong> The config is injected into your global VS Code
+          settings. Once set up, it works from any workspace, any directory
+          &mdash; you don't need to be inside the confluence-mcp folder.
+        </p>
+      </section>
+
+      <!-- ── Why use this ── -->
+      <section>
+        <h2>Why Use This</h2>
+        <p style="color: var(--text-dim); margin-bottom: 12px">
+          Keep your repo and Confluence documentation in sync without leaving VS
+          Code.
+        </p>
+        <div class="cards">
+          <div class="card">
+            <h4>Write docs from your IDE</h4>
+            <p>
+              Ask Copilot to update or create Confluence pages directly. No
+              browser tab switching, no copy-paste.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Generate diagrams</h4>
+            <p>
+              Have agents generate draw.io diagrams, architecture overviews, or
+              flowcharts and push them straight to Confluence.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Repo &harr; Confluence sync</h4>
+            <p>
+              Made changes in code? Tell Copilot to update the corresponding
+              Confluence page. Documentation stays current with your codebase.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Review &amp; comment</h4>
+            <p>
+              Read Confluence pages for context during code reviews, add
+              comments, and tag pages with labels &mdash; all from chat.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Tools ── -->
+      <section>
+        <h2>Tools (20)</h2>
+
+        <h3>Read (6)</h3>
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td><code>get_page</code> <span class="tag-r">READ</span></td>
+            <td>Fetch page by ID</td>
+            <td><code>get_page("504270225")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>search_confluence</code> <span class="tag-r">READ</span>
+            </td>
+            <td>CQL search</td>
+            <td><code>search_confluence('text ~ "deployment"')</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>get_page_by_title</code> <span class="tag-r">READ</span>
+            </td>
+            <td>Find by title</td>
+            <td><code>get_page_by_title("SAP", "Architecture")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>get_space_pages</code> <span class="tag-r">READ</span>
+            </td>
+            <td>List space pages</td>
+            <td><code>get_space_pages("SAP")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>get_page_children</code> <span class="tag-r">READ</span>
+            </td>
+            <td>Page hierarchy</td>
+            <td><code>get_page_children("479570414")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>get_page_comments</code> <span class="tag-r">READ</span>
+            </td>
+            <td>Read comments</td>
+            <td><code>get_page_comments("504270225")</code></td>
+          </tr>
+        </table>
+
+        <h3>Write (6)</h3>
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td>
+              <code>prepend_to_page</code> <span class="tag-w">WRITE</span>
+            </td>
+            <td>Add to top</td>
+            <td><code>prepend_to_page("685316626", "Note")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>append_to_page</code> <span class="tag-w">WRITE</span>
+            </td>
+            <td>Add to bottom</td>
+            <td><code>append_to_page("685316626", "Footer")</code></td>
+          </tr>
+          <tr>
+            <td><code>update_page</code> <span class="tag-w">WRITE</span></td>
+            <td>Replace entire content</td>
+            <td>
+              <code>update_page("685316626", "&lt;p&gt;New&lt;/p&gt;")</code>
+            </td>
+          </tr>
+          <tr>
+            <td><code>create_page</code> <span class="tag-w">WRITE</span></td>
+            <td>Create page</td>
+            <td><code>create_page("SAP", "Title", "Body")</code></td>
+          </tr>
+          <tr>
+            <td><code>add_comment</code> <span class="tag-w">WRITE</span></td>
+            <td>Add comment</td>
+            <td><code>add_comment("504270225", "LGTM")</code></td>
+          </tr>
+          <tr>
+            <td><code>add_label</code> <span class="tag-w">WRITE</span></td>
+            <td>Add labels</td>
+            <td><code>add_label("504270225", "gcp,prod")</code></td>
+          </tr>
+        </table>
+
+        <h3>Crawl &amp; Navigation (2)</h3>
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td><code>crawl_pages</code> <span class="tag-r">READ</span></td>
+            <td>Smart search + follow links &amp; children</td>
+            <td><code>crawl_pages("architecture", space_key="SAP")</code></td>
+          </tr>
+          <tr>
+            <td><code>get_page_tree</code> <span class="tag-r">READ</span></td>
+            <td>Show page hierarchy tree</td>
+            <td><code>get_page_tree("479570414", depth=3)</code></td>
+          </tr>
+        </table>
+
+        <h3>Attachments (2)</h3>
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td>
+              <code>get_attachments</code> <span class="tag-r">READ</span>
+            </td>
+            <td>List files on a page</td>
+            <td><code>get_attachments("504270225")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>upload_attachment</code> <span class="tag-w">WRITE</span>
+            </td>
+            <td>Upload file to a page</td>
+            <td>
+              <code>upload_attachment("504270225", "data.csv", "...")</code>
+            </td>
+          </tr>
+        </table>
+
+        <h3>Diagrams (4)</h3>
+        <table>
+          <tr>
+            <th>Tool</th>
+            <th>Description</th>
+            <th>Example</th>
+          </tr>
+          <tr>
+            <td>
+              <code>list_diagram_icons</code> <span class="tag-r">READ</span>
+            </td>
+            <td>Browse 225 GCP icon catalog</td>
+            <td><code>list_diagram_icons("gcp")</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>create_drawio_diagram</code>
+              <span class="tag-w">WRITE</span>
+            </td>
+            <td>Generate draw.io with official icons</td>
+            <td>See examples below</td>
+          </tr>
+          <tr>
+            <td>
+              <code>preview_drawio_diagram</code>
+              <span class="tag-r">READ</span>
+            </td>
+            <td>Save diagram locally for preview</td>
+            <td><code>preview_drawio_diagram('{...}')</code></td>
+          </tr>
+          <tr>
+            <td>
+              <code>publish_drawio_diagram</code>
+              <span class="tag-w">WRITE</span>
+            </td>
+            <td>Publish diagram to Confluence page</td>
+            <td><code>publish_drawio_diagram("504270225", '{...}')</code></td>
+          </tr>
+        </table>
+        <p style="color: var(--text-dim); margin-top: 12px">
+          <strong>Diagram policy:</strong> All diagrams use
+          <strong>draw.io</strong> with official <strong>GCP</strong> icons
+          (<code class="ci">mxgraph.gcp2</code> stencils),
+          <strong>SAP BTP</strong> styled components, or
+          <strong>Azure</strong> icons. No generic shapes.
+        </p>
+      </section>
+
+      <!-- ── Usage ── -->
+      <section>
+        <h2>Usage</h2>
+        <p style="color: var(--text-dim); margin-bottom: 12px">
+          Talk to Copilot in VS Code chat. It picks the right tool.
+        </p>
+        <div class="cards">
+          <div class="card">
+            <h4>Search</h4>
+            <p>"Search Confluence for architecture docs"</p>
+          </div>
+          <div class="card">
+            <h4>Crawl</h4>
+            <p>"Crawl the SAP space and find everything about GCP migration"</p>
+          </div>
+          <div class="card">
+            <h4>Page Tree</h4>
+            <p>"Show me the page tree under SAP-GRC Home"</p>
+          </div>
+          <div class="card">
+            <h4>Create</h4>
+            <p>"Create a new Confluence page for migration notes"</p>
+          </div>
+          <div class="card">
+            <h4>Diagram</h4>
+            <p>"Create a GCP architecture diagram for our data pipeline"</p>
+          </div>
+          <div class="card">
+            <h4>Attachments</h4>
+            <p>"Upload the CSV report to the Environments page"</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── CQL ── -->
+      <section>
+        <h2>CQL Reference</h2>
+        <p style="color: var(--text-dim); margin-bottom: 12px">
+          <code class="ci">search_confluence</code> accepts Confluence Query
+          Language.
+        </p>
+        <div class="cql">
+          <div class="cql-row">
+            <span class="cql-label">Full-text</span
+            ><span class="cql-code">text ~ "deployment"</span>
+          </div>
+          <div class="cql-row">
+            <span class="cql-label">Space filter</span
+            ><span class="cql-code">space = "SAP" AND type = "page"</span>
+          </div>
+          <div class="cql-row">
+            <span class="cql-label">Recent changes</span
+            ><span class="cql-code">lastModified > "2025-06-01"</span>
+          </div>
+          <div class="cql-row">
+            <span class="cql-label">By creator</span
+            ><span class="cql-code">creator = currentUser()</span>
+          </div>
+          <div class="cql-row">
+            <span class="cql-label">By label</span
+            ><span class="cql-code">label = "gcp" AND label = "prod"</span>
+          </div>
+          <div class="cql-row">
+            <span class="cql-label">Title match</span
+            ><span class="cql-code">title ~ "Architecture"</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Troubleshooting ── -->
+      <section>
+        <h2>Troubleshooting</h2>
+        <div class="cards">
+          <div class="card">
+            <h4>Server not showing?</h4>
+            <p>
+              <code class="ci">Ctrl+Shift+P</code> &rarr;
+              <strong>MCP: Reset All Cached MCP Servers</strong>, then reload.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Connection error?</h4>
+            <p>
+              Check you're on the corporate network/VPN and your PAT hasn't
+              expired.
+            </p>
+          </div>
+          <div class="card">
+            <h4>SSL warnings?</h4>
+            <p>
+              Expected behind corporate proxy. Uses
+              <code class="ci">verify=False</code> by design.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Write tools fail?</h4>
+            <p>
+              Usually proxy/DNS. Run <code class="ci">git pull</code> to get the
+              latest fixes.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Architecture ── -->
+      <section>
+        <h2>Architecture</h2>
+        <pre style="font-size: 0.82rem">
+┌─────────────┐    stdio/JSON-RPC    ┌─────────────────┐    HTTPS + PAT    ┌────────────────┐
+│  VS Code    │ ◄──────────────────► │  confluence-mcp │ ◄──────────────► │  Confluence    │
+│  Copilot    │                      │  server.py      │                  │  Data Center   │
+└─────────────┘                      └─────────────────┘                  └────────────────┘
+</pre
+        >
+        <div class="cards">
+          <div class="card">
+            <h4>Transport</h4>
+            <p>
+              stdio &mdash; VS Code spawns the Python process, communicates via
+              JSON-RPC over stdin/stdout.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Auth</h4>
+            <p>
+              Personal Access Token &mdash; Bearer auth against Confluence REST
+              API.
+            </p>
+          </div>
+          <div class="card">
+            <h4>Stack</h4>
+            <p>
+              <code class="ci">mcp &ge; 1.0</code> (FastMCP) +
+              <code class="ci">httpx</code> (HTTP client).
+            </p>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      Developed &amp; maintained by the GRC &amp; Legal IT team &mdash;
+      <a
+        href="https://github.com/your-org/confluence-mcp"
+        target="_blank"
+        rel="noopener noreferrer"
+        >GitHub</a
+      >
+      &middot;
+      <a
+        href="https://your-confluence.company.com/plugins/personalaccesstokens/usertokens.action"
+        target="_blank"
+        rel="noopener noreferrer"
+        >Get PAT</a
+      >
+    </footer>
+  </body>
+</html>
